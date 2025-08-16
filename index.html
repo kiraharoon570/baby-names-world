@@ -1,0 +1,195 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Baby Names World</title>
+  <style>
+    :root {
+      --primary: #ff6f61;
+      --accent: #ffe6e1;
+      --bg: #f9f9f9;
+      --text: #333;
+      --card: #fff;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); }
+    header { background: var(--primary); color: #fff; padding: 22px 16px; text-align: center; font-weight: 700; font-size: 22px; }
+    .container { max-width: 980px; margin: 0 auto; padding: 18px; }
+    .toolbar { display: grid; gap: 12px; grid-template-columns: 1fr; margin-bottom: 16px; }
+    .search { display: flex; gap: 10px; }
+    .search input { flex: 1; padding: 12px 14px; border: 1px solid #ddd; border-radius: 12px; font-size: 16px; }
+    .alphabet { display: flex; flex-wrap: wrap; gap: 6px; }
+    .alphabet button { border: 1px solid #ddd; background: #fff; padding: 6px 10px; border-radius: 10px; cursor: pointer; }
+    .alphabet button.active, .alphabet button:hover { background: var(--accent); border-color: var(--primary); }
+    .section { margin-top: 28px; }
+    h2 { color: var(--primary); margin: 8px 0 14px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+    .card { background: var(--card); padding: 14px; border-radius: 14px; border: 1px solid #eee; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+    .name { font-weight: 700; font-size: 18px; }
+    .meaning { margin-top: 6px; color: #555; font-size: 14px; }
+    footer { text-align: center; padding: 16px; background: var(--primary); color: #fff; margin-top: 22px; }
+    .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .tabs { display: inline-flex; background: #fff; border: 1px solid #eee; border-radius: 12px; overflow: hidden; }
+    .tabs button { padding: 8px 14px; border: none; background: #fff; cursor: pointer; }
+    .tabs button.active { background: var(--accent); color: #000; }
+    .badge { font-size: 12px; background: var(--accent); padding: 4px 8px; border-radius: 999px; border: 1px solid #ffd0c8; }
+    @media (min-width: 720px) {
+      .toolbar { grid-template-columns: 1fr auto; align-items: center; }
+    }
+  </style>
+</head>
+<body>
+<header>Baby Names World</header>
+<div class="container">
+  <div class="toolbar">
+    <div class="search">
+      <input id="search" type="text" placeholder="Search name or meaning..." aria-label="Search name or meaning"/>
+    </div>
+    <div class="row">
+      <div class="tabs" role="tablist">
+        <button id="tab-boys" class="active" role="tab" aria-selected="true">Boy Names</button>
+        <button id="tab-girls" role="tab" aria-selected="false">Girl Names</button>
+      </div>
+      <span class="badge" id="count">0 names</span>
+    </div>
+  </div>
+
+  <div class="alphabet" id="alphabet"></div>
+
+  <section class="section" id="boys-section" aria-labelledby="boys-heading">
+    <h2 id="boys-heading">Boy Names</h2>
+    <div class="grid" id="boys-grid"></div>
+  </section>
+
+  <section class="section" id="girls-section" aria-labelledby="girls-heading" style="display:none;">
+    <h2 id="girls-heading">Girl Names</h2>
+    <div class="grid" id="girls-grid"></div>
+  </section>
+</div>
+
+<footer>© 2025 Baby Names World</footer>
+
+<script>
+  // Sample data (15 each)
+  const boys = [
+    { name: "Aiden", meaning: "Little fire" },
+    { name: "Benjamin", meaning: "Son of the right hand" },
+    { name: "Caleb", meaning: "Faithful, wholehearted" },
+    { name: "Daniel", meaning: "God is my judge" },
+    { name: "Ethan", meaning: "Strong, firm" },
+    { name: "Finn", meaning: "Fair, white" },
+    { name: "Gabriel", meaning: "God is my strength" },
+    { name: "Henry", meaning: "Ruler of the home" },
+    { name: "Isaac", meaning: "Laughter" },
+    { name: "James", meaning: "Supplanter" },
+    { name: "Liam", meaning: "Strong-willed warrior" },
+    { name: "Noah", meaning: "Rest, comfort" },
+    { name: "Oliver", meaning: "Olive tree" },
+    { name: "Samuel", meaning: "God has heard" },
+    { name: "William", meaning: "Resolute protector" },
+  ].sort((a,b)=>a.name.localeCompare(b.name));
+
+  const girls = [
+    { name: "Abigail", meaning: "Father's joy" },
+    { name: "Bella", meaning: "Beautiful" },
+    { name: "Chloe", meaning: "Blooming" },
+    { name: "Daisy", meaning: "Day's eye" },
+    { name: "Ella", meaning: "Light, beautiful fairy" },
+    { name: "Faith", meaning: "Trust, belief" },
+    { name: "Grace", meaning: "Elegance, kindness" },
+    { name: "Hannah", meaning: "Favor, grace" },
+    { name: "Isla", meaning: "Island" },
+    { name: "Jasmine", meaning: "Flower" },
+    { name: "Lily", meaning: "Pure, innocent" },
+    { name: "Mia", meaning: "Mine, beloved" },
+    { name: "Nora", meaning: "Honor, light" },
+    { name: "Sophia", meaning: "Wisdom" },
+    { name: "Zara", meaning: "Princess, flower" },
+  ].sort((a,b)=>a.name.localeCompare(b.name));
+
+  let current = 'boys';
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+  const elAlphabet = document.getElementById("alphabet");
+  const elBoysGrid = document.getElementById("boys-grid");
+  const elGirlsGrid = document.getElementById("girls-grid");
+  const elSearch = document.getElementById("search");
+  const elCount = document.getElementById("count");
+
+  function renderGrid(data, grid) {
+    grid.innerHTML = data.map(item => `
+      <div class="card">
+        <div class="name">${item.name}</div>
+        <div class="meaning">${item.meaning}</div>
+      </div>
+    `).join("");
+  }
+
+  function updateCount() {
+    const cards = document.querySelectorAll(current === 'boys' ? "#boys-grid .card" : "#girls-grid .card");
+    elCount.textContent = cards.length + (cards.length === 1 ? " name" : " names");
+  }
+
+  function filterAndRender(letter=null) {
+    const query = elSearch.value.trim().toLowerCase();
+    const source = current === 'boys' ? boys : girls;
+    let filtered = source.filter(item => {
+      const matchesQuery = !query || item.name.toLowerCase().includes(query) || item.meaning.toLowerCase().includes(query);
+      const matchesLetter = !letter || item.name.startsWith(letter);
+      return matchesQuery && matchesLetter;
+    });
+    if (current === 'boys') renderGrid(filtered, elBoysGrid);
+    else renderGrid(filtered, elGirlsGrid);
+    updateCount();
+  }
+
+  // Build alphabet buttons
+  alphabet.forEach(l => {
+    const btn = document.createElement("button");
+    btn.textContent = l;
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".alphabet button").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      filterAndRender(l);
+    });
+    elAlphabet.appendChild(btn);
+  });
+
+  // Tabs
+  const tabBoys = document.getElementById("tab-boys");
+  const tabGirls = document.getElementById("tab-girls");
+  tabBoys.addEventListener("click", () => {
+    current = 'boys';
+    tabBoys.classList.add("active"); tabBoys.setAttribute("aria-selected","true");
+    tabGirls.classList.remove("active"); tabGirls.setAttribute("aria-selected","false");
+    document.getElementById("boys-section").style.display = "";
+    document.getElementById("girls-section").style.display = "none";
+    document.querySelectorAll(".alphabet button").forEach(b=>b.classList.remove("active"));
+    elSearch.value = "";
+    filterAndRender();
+  });
+  tabGirls.addEventListener("click", () => {
+    current = 'girls';
+    tabGirls.classList.add("active"); tabGirls.setAttribute("aria-selected","true");
+    tabBoys.classList.remove("active"); tabBoys.setAttribute("aria-selected","false");
+    document.getElementById("boys-section").style.display = "none";
+    document.getElementById("girls-section").style.display = "";
+    document.querySelectorAll(".alphabet button").forEach(b=>b.classList.remove("active"));
+    elSearch.value = "";
+    filterAndRender();
+  });
+
+  elSearch.addEventListener("input", () => {
+    document.querySelectorAll(".alphabet button").forEach(b=>b.classList.remove("active"));
+    filterAndRender();
+  });
+
+  // Initial render
+  renderGrid(boys, elBoysGrid);
+  renderGrid(girls, elGirlsGrid);
+  updateCount();
+</script>
+</body>
+</html>
